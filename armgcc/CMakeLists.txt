@@ -191,6 +191,11 @@ if(AKNANO_BOARD_MODEL STREQUAL rt1060)
     include(${ProjDirPath}/config_rt1060.cmake)
 endif(AKNANO_BOARD_MODEL STREQUAL rt1060)
 
+if(AKNANO_BOARD_MODEL STREQUAL rt1180)
+    include(${ProjDirPath}/flags_rt1180.cmake)
+    include(${ProjDirPath}/config_rt1180.cmake)
+endif(AKNANO_BOARD_MODEL STREQUAL rt1180)
+
 include(${ProjDirPath}/../../libtufnano/tufFilePaths.cmake)
 include(${ProjDirPath}/../../../middleware/coreMQTT-Agent/mqttAgentFilePaths.cmake)
 include(${ProjDirPath}/../../../middleware/coreMQTT/mqttFilePaths.cmake)
@@ -199,6 +204,7 @@ include(${ProjDirPath}/../../../middleware/coreMQTT/mqttFilePaths.cmake)
 SET(FreeRtosAwsPath "${ProjDirPath}/../../../rtos/amazon-freertos")
 SET(FreeRtosKernelPath "${ProjDirPath}/../../../rtos/freertos/freertos_kernel")
 SET(MCUXpressoPath "${ProjDirPath}/../../../core/")
+# SET(MCUXpressoPath "/home/detsch/Downloads/SDK_2_14_1_MIMXRT1180-EVK/")
 
 add_executable(${MCUX_SDK_PROJECT_NAME}
 "${ProjDirPath}/../config_files/FreeRTOSConfig.h"
@@ -246,8 +252,9 @@ ${TUF_FIAT_SOURCES}
 "${FreeRtosKernelPath}/tasks.c"
 "${FreeRtosKernelPath}/timers.c"
 
-"${ProjDirPath}/../../../middleware/lwip/port/enet_ethernetif_kinetis.c"
-"${ProjDirPath}/../../../middleware/lwip/port/enet_ethernetif.c"
+# RT1180 disable
+# "${ProjDirPath}/../../../middleware/lwip/port/enet_ethernetif_kinetis.c"
+# "${ProjDirPath}/../../../middleware/lwip/port/enet_ethernetif.c"
 "${ProjDirPath}/../../../poc/3rdparty/rtos/freertos/vendors/nxp/secure_sockets/lwip/iot_secure_sockets.c"
 
 "${ProjDirPath}/../../../middleware/freertos/backoffAlgorithm/source/backoff_algorithm.c"
@@ -318,6 +325,33 @@ if(AKNANO_BOARD_MODEL STREQUAL rt1060)
         ${MCUXpressoPath}/drivers/trng/
     )
 endif(AKNANO_BOARD_MODEL STREQUAL rt1060)
+
+if(AKNANO_BOARD_MODEL STREQUAL rt1180)
+
+    target_sources(${MCUX_SDK_PROJECT_NAME} PRIVATE
+    "${ProjDirPath}/../board_rt1180/pin_mux.c"
+    "${ProjDirPath}/../board_rt1180/pin_mux.h"
+    "${ProjDirPath}/../board_rt1180/board.c"
+    "${ProjDirPath}/../board_rt1180/board.h"
+    "${ProjDirPath}/../board_rt1180/clock_config.c"
+    "${ProjDirPath}/../board_rt1180/clock_config.h"
+    "${ProjDirPath}/../board_rt1180/dcd.c"
+    "${ProjDirPath}/../board_rt1180/dcd.h"
+
+    # "${MCUXpressoPath}/devices/MIMXRT1062/gcc/startup_MIMXRT1062.S"
+    )
+    SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DAKNANO_BOARD_MODEL_RT1180")
+
+    target_include_directories(${MCUX_SDK_PROJECT_NAME} PRIVATE
+    ${ProjDirPath}/../board_rt1180
+    ${MCUXpressoPath}/rtos/freertos/freertos-kernel/portable/GCC/ARM_CM33/secure/
+    )
+
+    # target_include_directories(${MCUX_SDK_PROJECT_NAME} PRIVATE
+    #     ${MCUXpressoPath}/drivers/trng/
+    # )
+endif(AKNANO_BOARD_MODEL STREQUAL rt1180)
+
 
 SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_FLEXSPI_NOR} -fdiagnostics-color -DUSE_FLASH=1 -DLWIP_NETIF_API=1 -DMBEDTLS_ERROR_C -DMBEDTLS_CMAC_C -DJSON_QUERY_KEY_SEPARATOR=\\'/\\'")
 SET(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DCACHE_MODE_WRITE_THROUGH")
@@ -493,6 +527,26 @@ if(AKNANO_BOARD_MODEL STREQUAL rt1170)
     )
 endif(AKNANO_BOARD_MODEL STREQUAL rt1170)
 
+if(AKNANO_BOARD_MODEL STREQUAL rt1180)
+    #path for entry cmake
+    set(CMAKE_MODULE_PATH
+        ${ProjDirPath}/../../aktualizr-nano/
+        ${MCUXpressoPath}/
+        ${ProjDirPath}/../../../
+        ${ProjDirPath}/../../../middleware
+        ${MCUXpressoPath}/components/phy/mdio/enet/
+        ${ProjDirPath}/../../../middleware/CMSIS_5/Core/Include/
+        ${ProjDirPath}/../../../middleware/mbedtls
+        ${MCUXpressoPath}/devices/MIMXRT1189
+        ${MCUXpressoPath}/drivers/lpi2c/
+        ${ProjDirPath}/../../../rtos/amazon-freertos/libraries/abstractions
+        ${ProjDirPath}/../../../rtos/amazon-freertos/tools/cmake
+        ${ProjDirPath}/../../../rtos/freertos/freertos_kernel
+        ${MCUXpressoPath}/components/silicon_id
+        ${MCUXpressoPath}/components/silicon_id/socs/rt10xx
+    )
+endif(AKNANO_BOARD_MODEL STREQUAL rt1180)
+
 include(middleware_aktualizr-nano)
 
 if(AKNANO_SELF_TEST EQUAL 1)
@@ -531,6 +585,10 @@ endif(AKNANO_BOARD_MODEL STREQUAL rt1060)
 if(AKNANO_BOARD_MODEL STREQUAL rt1170)
 include(${MCUXpressoPath}/devices/MIMXRT1176/all_lib_device.cmake)
 endif(AKNANO_BOARD_MODEL STREQUAL rt1170)
+
+if(AKNANO_BOARD_MODEL STREQUAL rt1180)
+include(${MCUXpressoPath}/devices/MIMXRT1189/all_lib_device.cmake)
+endif(AKNANO_BOARD_MODEL STREQUAL rt1180)
 
 TARGET_LINK_LIBRARIES(${MCUX_SDK_PROJECT_NAME} PRIVATE -Wl,--start-group)
 

@@ -15,8 +15,12 @@
 #include "queue.h"
 #include "timers.h"
 #include "event_groups.h"
-#include "fsl_gpio.h"
 
+#ifdef AKNANO_BOARD_MODEL_RT1180
+#include "fsl_rgpio.h"
+#else
+#include "fsl_gpio.h"
+#endif
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
@@ -38,11 +42,21 @@
 #define BOARD_USER_BUTTON_IRQ         GPIO5_Combined_0_15_IRQn
 #define BOARD_USER_BUTTON_IRQ_HANDLER GPIO5_Combined_0_15_IRQHandler
 #define BOARD_USER_BUTTON_NAME        "SW8"
-#else
+#endif
+#ifdef AKNANO_BOARD_MODEL_RT1170
 #define BOARD_USER_BUTTON_GPIO GPIO13
 #define BOARD_USER_BUTTON_GPIO_PIN (0U)
 #define BOARD_USER_BUTTON_IRQ         GPIO13_Combined_0_31_IRQn
 #define BOARD_USER_BUTTON_IRQ_HANDLER GPIO13_Combined_0_31_IRQHandler
+#define BOARD_USER_BUTTON_NAME        "SW7"
+#endif
+
+#ifdef AKNANO_BOARD_MODEL_RT1180
+// TODO adjust values for RT1180
+#define BOARD_USER_BUTTON_GPIO RGPIO1
+#define BOARD_USER_BUTTON_GPIO_PIN (0U)
+#define BOARD_USER_BUTTON_IRQ         RGPIO13_Combined_0_31_IRQn
+#define BOARD_USER_BUTTON_IRQ_HANDLER RGPIO13_Combined_0_31_IRQHandler
 #define BOARD_USER_BUTTON_NAME        "SW7"
 #endif
 
@@ -56,10 +70,17 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+#ifdef AKNANO_BOARD_MODEL_RT1180
+rgpio_pin_config_t sw_config = {
+    .pinDirection = kRGPIO_DigitalInput,
+    .outputLogic = 0U,
+};
+#else
 static gpio_pin_config_t sw_config = {
         kGPIO_DigitalInput,
         0,
 };
+#endif
 
 static int sleepTimeMs = 2000;
 static int newSleepTimeMs = 2000;
@@ -93,8 +114,11 @@ void btn_read_task(void *pvParameters)
     // Initialize the last_wake_time variable with the current time
     last_wake_time = xTaskGetTickCount();
 
+#ifdef AKNANO_BOARD_MODEL_RT1180
+    RGPIO_PinInit(BOARD_SW_GPIO, BOARD_SW_GPIO_PIN, &sw_config);
+#else
     GPIO_PinInit(BOARD_SW_GPIO, BOARD_SW_GPIO_PIN, &sw_config);
-
+#endif
     for( ;; ) {
         if (newSleepTimeMs != sleepTimeMs) {
             LogInfo((ANSI_COLOR_CYAN "Updating sleep time ms %d -> %d" ANSI_COLOR_RESET,
@@ -105,7 +129,12 @@ void btn_read_task(void *pvParameters)
         // Wait for the next cycle.
         vTaskDelayUntil( &last_wake_time, sleepTimeMs / portTICK_PERIOD_MS );
         // Get the level on button pin
+
+#ifdef AKNANO_BOARD_MODEL_RT1180
+        curr_state = RGPIO_PinRead(BOARD_SW_GPIO, BOARD_SW_GPIO_PIN);
+#else
         curr_state = GPIO_PinRead(BOARD_SW_GPIO, BOARD_SW_GPIO_PIN);
+#endif
         // if ((curr_state == BTN_PRESSED) && (prev_state == BTN_NOT_PRESSED)) {
         //     xEventGroupSetBits(xFlagsEventGroup, BTN_PRESSED_Msk);
         // }

@@ -43,7 +43,8 @@ status_t aknano_cli_gen_random_bytes(char *output, size_t size)
         return status;
     return kStatus_Success;
 }
-#else
+#endif
+#ifdef AKNANO_BOARD_MODEL_RT1170
 #include "fsl_caam.h"
 #define RNG_EXAMPLE_RANDOM_NUMBERS     (4U)
 #define RNG_EXAMPLE_RANDOM_BYTES       (16U)
@@ -104,6 +105,15 @@ status_t aknano_cli_gen_random_bytes(char *output, size_t size)
                                     kCAAM_RngDataAny, NULL);
     return kStatus_Success;
 }
+#endif
+#ifdef AKNANO_BOARD_MODEL_RT1180
+status_t aknano_cli_gen_random_bytes(char *output, size_t size)
+{
+    // TODO: implement me!!
+    LogError(("aknano_cli_gen_random_bytes not implemented for RT1180"));
+    return kStatus_Success;
+}
+
 #endif
 
 /*
